@@ -111,6 +111,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Base directory lokasi file app.py ini berada
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # ---------------------------------------------------------
 # 2. Helper Functions & Data Loading
 # ---------------------------------------------------------
@@ -124,9 +127,13 @@ def get_image_base64(path):
 
 @st.cache_data
 def load_data():
-    file_path = "data/clean_anime.csv"
+    file_path = os.path.join(BASE_DIR, "data", "clean_anime.csv")
     if not os.path.exists(file_path):
-        file_path = "data/top_animes_after_cleaning.csv"
+        file_path = os.path.join(BASE_DIR, "data", "top_animes_after_cleaning.csv")
+    
+    if not os.path.exists(file_path):
+        st.error(f"❌ File data tidak ditemukan! Pastikan file CSV ada di folder: `{os.path.join(BASE_DIR, 'data')}`")
+        st.stop()
     
     df = pd.read_csv(file_path)
     
@@ -182,7 +189,7 @@ top_10_anime = anime_data.sort_values(by='Ranked' if 'Ranked' in anime_data.colu
 cols = st.columns(10)
 for idx, (_, anime) in enumerate(top_10_anime.iterrows()):
     with cols[idx]:
-        poster_path = f"Poster/{anime['Name']}.jpg"
+        poster_path = os.path.join(BASE_DIR, "Poster", f"{anime['Name']}.jpg")
         img_src = get_image_base64(poster_path)
         score_val = anime['Score'] if 'Score' in anime and pd.notnull(anime['Score']) else "N/A"
         
@@ -191,7 +198,7 @@ for idx, (_, anime) in enumerate(top_10_anime.iterrows()):
             <div class="poster-box">
                 <img src="{img_src}" class="poster-img"/>
                 <div class="poster-name" title="{anime['Name']}">{anime['Name']}</div>
-                <div class="poster-score">⭐ {score_val}</div>
+                <div class="poster-score">★ {score_val}</div>
                 <div class="poster-rank">{idx+1}</div>
             </div>
             """,
@@ -282,7 +289,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 left_col, right_col = st.columns(2)
 
 with left_col:
-    st.markdown("### 🏅 Top 10 Favorite Anime (Filtered by Genre)")
+    st.markdown("### 🏆 Top 10 Favorite Anime (Filtered by Genre)")
     if 'Favorites' in chart_data.columns and not chart_data.empty:
         top_fav = chart_data.sort_values(by='Favorites', ascending=False).head(10)
         fig_fav = px.bar(
